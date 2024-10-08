@@ -61,6 +61,39 @@ def captura(largura, altura):
     cv2.destroyAllWindows()
     #fim da função
             
+def get_imagem_com_id(): #ler as fotos e captura os dados em uma lista
+    caminhos = [os.path.join('fotos', f) for f in os.listdir('fotos')] #for list compreenching 
+    faces = []
+    ids = []
+
+    for caminho_imagem in caminhos:
+        imagem_face = cv2.cvtColor(cv2.imread(caminho_imagem), cv2.COLOR_BGR2GRAY) #pra pegar a cor cinza das imagens
+        id = int(os.path.split(caminho_imagem)[-1].split('.')[1]) #pega valor str e separa em uma lista
+        ids.append(id)
+        faces.append(imagem_face)
+
+    return np.array(ids), faces
+
+def treinamento():
+    #criando os elementos de reconhecimento necessarios 
+    eigenface = cv2.face.EigenFaceRecognizer_create() #pega as imagens em cinza para o treinamento
+    fisherface = cv2.face.FisherFaceRecognizer_create() #mapa do rosto
+    lbph = cv2.face.LBPHFaceRecognizer_create()
+
+    ids, faces = get_imagem_com_id()
+
+    #treinanda o algoritimo do programa
+    print('Treinando...')
+    eigenface.train(faces, ids)
+    eigenface.write('classificadorEigen.yml')
+    fisherface.train(faces, ids)
+    fisherface.write('classificadorFisher.yml')
+    lbph.train(faces, ids)
+    lbph.write('classificadorLBPH.yml')
+
+    #finaliza treinamento
+    print('Treinamento fiznalizado com sucesso!')
+
 #NOTE - PROGRAMA PRINCIPAL
 if __name__ == '__main__':
     #define o tamanho da camera
@@ -70,7 +103,8 @@ if __name__ == '__main__':
     while True:
         #menu
         print('0 - Sair do programa!')
-        print('1 - Capturar imagem do usuário!')
+        print('1 - Capturar imagem do usuário.')
+        print('2 - Treinar sistema.')
         
         op = input('Opção desejada: ')
 
@@ -80,4 +114,11 @@ if __name__ == '__main__':
                 break
             case '1':
                 captura(largura, altura)
+                continue
+            case '2':
+                treinamento()
+                continue
+            case _:
+                print('Opção inválida!')
+                continue
             
