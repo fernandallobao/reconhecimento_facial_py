@@ -74,6 +74,8 @@ def get_imagem_com_id(): #ler as fotos e captura os dados em uma lista
 
     return np.array(ids), faces
 
+# ANCHOR :treinamento
+
 def treinamento():
     #criando os elementos de reconhecimento necessarios 
     eigenface = cv2.face.EigenFaceRecognizer_create() #pega as imagens em cinza para o treinamento
@@ -94,6 +96,36 @@ def treinamento():
     #finaliza treinamento
     print('Treinamento fiznalizado com sucesso!')
 
+# ANCHOR: função de reconehcimento facial
+
+def reconhecedor_eigenfaces(largura, altura):
+    detector_faces = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+    reconhecedor = cv2.face.EigenFaceRecognizer_create()
+    reconhecedor.read('classificadorEigen.yml')
+    fonte = cv2.FONT_HERSHEY_COMPLEX_SMALL
+
+    camera = cv2.VideoCapture(0) #abre novamente a camera para identificar o rosto
+
+    while True: #faz o reconhecimento propiamente dito
+        conectado, imagem = camera.read()
+        imagem_cinza = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
+        faces_detectadas = detector_faces.detectMultiScale(imagem_cinza, scaleFactor=1.5, minSize=(30,30))
+
+        for (x,y,l,a) in faces_detectadas:
+            imagem_face = cv2.resize(imagem_cinza[y:y + a, x:x + l], (largura, altura))
+            cv2.rectangle(imagem, (x,y), (x+l, y+a), (0,0,255), 2)
+            id, confianca = reconhecedor.predict(imagem_face)
+            cv2.putText(imagem, str(id), (x,y+(a+30)), fonte, 2, (0,0,255))
+
+        #encerra a camera
+        cv2.imshow('Reconhecer faces', imagem)
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+    camera.release()
+    cv2.destroyAllWindows()
+
+
 #NOTE - PROGRAMA PRINCIPAL
 if __name__ == '__main__':
     #define o tamanho da camera
@@ -105,6 +137,7 @@ if __name__ == '__main__':
         print('0 - Sair do programa!')
         print('1 - Capturar imagem do usuário.')
         print('2 - Treinar sistema.')
+        print('3 - Detecção de faces.')
         
         op = input('Opção desejada: ')
 
@@ -117,6 +150,9 @@ if __name__ == '__main__':
                 continue
             case '2':
                 treinamento()
+                continue
+            case '3':
+                reconhecedor_eigenfaces(largura, altura)
                 continue
             case _:
                 print('Opção inválida!')
